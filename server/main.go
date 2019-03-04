@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 
-	"google.golang.org/grpc"
 	pb "github.com/zhhnzw/grpc_demo/helloworld"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -27,9 +27,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(UnaryServerInterceptor))
 	pb.RegisterSimpleServiceServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Printf("before handling. Info: %+v", info)
+	resp, err := handler(ctx, req)
+	log.Printf("after handling. resp: %+v", resp)
+	return resp, err
 }
