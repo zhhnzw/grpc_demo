@@ -27,7 +27,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer(grpc.UnaryInterceptor(UnaryServerInterceptor))
+	// 可以传多个拦截器
+	s := grpc.NewServer([]grpc.ServerOption{grpc.UnaryInterceptor(UnaryServerInterceptor)}...)
 	pb.RegisterSimpleServiceServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

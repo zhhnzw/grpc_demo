@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	pb "github.com/zhhnzw/grpc_demo/helloworld"
+	"google.golang.org/grpc"
 	"log"
 	"os"
 	"time"
-	"google.golang.org/grpc"
-	pb "github.com/zhhnzw/grpc_demo/helloworld"
 )
 
 const (
