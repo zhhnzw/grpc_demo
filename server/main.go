@@ -16,6 +16,11 @@ const (
 // server is used to implement helloworld.SimpleServer.
 type server struct{}
 
+func (s *server) mustEmbedUnimplementedSimpleServiceServer() {
+	//TODO implement me
+	panic("implement me")
+}
+
 // SayHello implements helloworld.SimpleServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.Name)
