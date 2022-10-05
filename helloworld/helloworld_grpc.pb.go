@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SimpleServiceClient interface {
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
+	SayHello1(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 }
 
 type simpleServiceClient struct {
@@ -42,11 +43,21 @@ func (c *simpleServiceClient) SayHello(ctx context.Context, in *HelloRequest, op
 	return out, nil
 }
 
+func (c *simpleServiceClient) SayHello1(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
+	out := new(HelloReply)
+	err := c.cc.Invoke(ctx, "/helloworld.SimpleService/SayHello1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SimpleServiceServer is the server API for SimpleService service.
 // All implementations should embed UnimplementedSimpleServiceServer
 // for forward compatibility
 type SimpleServiceServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
+	SayHello1(context.Context, *HelloRequest) (*HelloReply, error)
 }
 
 // UnimplementedSimpleServiceServer should be embedded to have forward compatible implementations.
@@ -55,6 +66,9 @@ type UnimplementedSimpleServiceServer struct {
 
 func (UnimplementedSimpleServiceServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+}
+func (UnimplementedSimpleServiceServer) SayHello1(context.Context, *HelloRequest) (*HelloReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SayHello1 not implemented")
 }
 
 // UnsafeSimpleServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -86,6 +100,24 @@ func _SimpleService_SayHello_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SimpleService_SayHello1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HelloRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SimpleServiceServer).SayHello1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/helloworld.SimpleService/SayHello1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SimpleServiceServer).SayHello1(ctx, req.(*HelloRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SimpleService_ServiceDesc is the grpc.ServiceDesc for SimpleService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +128,10 @@ var SimpleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SayHello",
 			Handler:    _SimpleService_SayHello_Handler,
+		},
+		{
+			MethodName: "SayHello1",
+			Handler:    _SimpleService_SayHello1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

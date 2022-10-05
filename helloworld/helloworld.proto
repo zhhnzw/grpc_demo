@@ -5,8 +5,14 @@ package helloworld;
 
 import "google/api/annotations.proto";  // 需要 import googleapis 的包
 
+message EmbedParam {
+  string param = 1;
+}
+
 message HelloRequest {
   string name = 1;
+  repeated string names = 2;
+  EmbedParam embed = 3;
 }
 
 message HelloReply {
@@ -18,6 +24,14 @@ service SimpleService {
     option (google.api.http) = {
       post: "/helloworld"
       body: "*"
+    };
+  }
+  rpc SayHello1 (HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      get: "/helloworld/{name}/{embed.param}"  // path引用的字段只能是基础类型，不能是像names这样的数组
+      additional_bindings {  // 为一个RPC方法定义多个http方法
+        get: "/helloworld"  // 请求消息中没有被url path绑定的任何字段都会自动成为HTTP查询参数
+      }
     };
   }
 }

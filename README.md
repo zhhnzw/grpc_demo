@@ -21,4 +21,8 @@ libprotoc 3.21.7
 
 启动gateway后测试：
 
-`curl -X POST -d '{"name": "will"}' 127.0.0.1:9090/helloworld`
+```bash
+$ curl -X POST -d '{"name": "will", "names":["1","2","3"], "embed":{"param":"world"}}' 127.0.0.1:9090/helloworld
+$ curl 127.0.0.1:9090/helloworld/name/embedparam  # 没传数组参数，可以跟下面的例子一样传
+$ curl 127.0.0.1:9090/helloworld?name=hello\&names=1\&names=2\&names=3\&embed.param=world  # 注意转义符，和数组参数的传输方式
+```

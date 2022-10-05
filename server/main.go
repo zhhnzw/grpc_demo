@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 
@@ -16,15 +17,15 @@ const (
 // server is used to implement helloworld.SimpleServer.
 type server struct{}
 
-func (s *server) mustEmbedUnimplementedSimpleServiceServer() {
-	//TODO implement me
-	panic("implement me")
-}
-
 // SayHello implements helloworld.SimpleServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.Name)
-	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
+	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s", in.Name, in.Names, in.Embed.GetParam())}, nil
+}
+
+func (s *server) SayHello1(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
+	log.Printf("Received: %v", in)
+	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s", in.Name, in.Names, in.Embed.GetParam())}, nil
 }
 
 func main() {
