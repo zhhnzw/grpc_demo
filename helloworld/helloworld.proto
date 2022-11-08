@@ -30,7 +30,12 @@ message LoginReply{
 }
 
 service UserService {
-  rpc Login (LoginRequest) returns (LoginReply) {}
+  rpc Login (LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/login"
+      body: "*"
+    };
+  }
 }
 
 service SimpleService {

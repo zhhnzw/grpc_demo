@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	echoEndpoint = flag.String("echo_endpoint", "localhost:50051", "endpoint of YourService")
+	endpoint            = flag.String("endpoint", "localhost:50051", "endpoint of YourService")
+	userServiceEndpoint = flag.String("userServiceEndpoint", "localhost:50052", "endpoint of YourService")
 )
 
 func run() error {
@@ -22,7 +23,11 @@ func run() error {
 	defer cancel()
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	err := gw.RegisterSimpleServiceHandlerFromEndpoint(ctx, mux, *echoEndpoint, opts)
+	err := gw.RegisterSimpleServiceHandlerFromEndpoint(ctx, mux, *endpoint, opts)
+	if err != nil {
+		return err
+	}
+	err = gw.RegisterUserServiceHandlerFromEndpoint(ctx, mux, *userServiceEndpoint, opts)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	pb "github.com/zhhnzw/grpc_demo/helloworld"
 	"google.golang.org/grpc"
@@ -22,7 +21,6 @@ const (
 type userServer struct{}
 
 func (s *userServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply, error) {
-	fmt.Println("Loginrequest: ", in.Username)
 	if in.Username == "zw" && in.Password == "password" {
 		tokenString := CreateToken(in.Username)
 		return &pb.LoginReply{Status: "200", Token: tokenString}, nil
@@ -53,7 +51,6 @@ type AuthToken struct {
 }
 
 func (auth *AuthToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	log.Println("GetRequestMetadata:", auth.Token)
 	return map[string]string{
 		"authorization": auth.Token,
 	}, nil
@@ -63,22 +60,16 @@ func (auth *AuthToken) RequireTransportSecurity() bool {
 	return false
 }
 
-// Claims defines the struct containing the token claims.
 type Claims struct {
 	jwt.StandardClaims
-
-	// Username defines the identity of the user.
 	UserName string `json:"username"`
 }
-
-// Step1. 从 context 的 metadata 中，取出 token
 
 func getTokenFromContext(ctx context.Context) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", status.Errorf(codes.Unauthenticated, "ErrNoMetadataInContext")
 	}
-	log.Printf("ctx:%v", md)
 	// md 的类型是 type MD map[string][]string
 	token, ok := md["authorization"]
 	if !ok || len(token) == 0 {
