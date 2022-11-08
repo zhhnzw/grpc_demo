@@ -18,17 +18,30 @@ type server struct{}
 
 // SayHello implements helloworld.SimpleServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	log.Printf("Received: %v", in.Name)
 	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s", in.Name, in.Names, in.Embed.GetParam())}, nil
 }
 
 func (s *server) SayHello1(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	userName, err := CheckAuth(ctx)
-	if err != nil {
-		return nil, err
+	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s", in.Name, in.Names, in.Embed.GetParam())}, nil
+}
+
+func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Printf("before handling. Info: %+v %+v", info, req)
+	resp, err := handler(ctx, req)
+	log.Printf("after handling. resp: %+v", resp)
+	return resp, err
+}
+
+func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	if info.FullMethod == "/helloworld.SimpleService/SayHello1" {
+		userName, err := CheckAuth(ctx)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("userName: %s", userName)
 	}
-	log.Printf("Received: %s %v", userName, in)
-	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s userName: %s", in.Name, in.Names, in.Embed.GetParam(), userName)}, nil
+	resp, err := handler(ctx, req)
+	return resp, err
 }
 
 func main() {
@@ -40,16 +53,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	// 可以传多个拦截器
-	s := grpc.NewServer([]grpc.ServerOption{grpc.UnaryInterceptor(UnaryServerInterceptor)}...)
+	s := grpc.NewServer([]grpc.ServerOption{grpc.ChainUnaryInterceptor(UnaryServerInterceptor, AuthInterceptor)}...)
 	pb.RegisterSimpleServiceServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-}
-
-func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	log.Printf("before handling. Info: %+v", info)
-	resp, err := handler(ctx, req)
-	log.Printf("after handling. resp: %+v", resp)
-	return resp, err
 }

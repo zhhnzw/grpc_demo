@@ -95,7 +95,7 @@ func CheckAuth(ctx context.Context) (string, error) {
 		return "", err
 	}
 	if !token.Valid {
-		return "", errors.New("ErrInvalidToken")
+		return "", status.Errorf(codes.Unauthenticated, "ErrInvalidToken")
 	}
 	return clientClaims.UserName, nil
 }

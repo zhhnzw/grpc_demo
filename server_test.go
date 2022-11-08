@@ -6,9 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	pb "github.com/zhhnzw/grpc_demo/helloworld"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -29,9 +30,6 @@ func TestGRPC(t *testing.T) {
 
 	// Contact the server and print out its response.
 	name := defaultName
-	if len(os.Args) > 1 {
-		name = os.Args[1]
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: name})
@@ -40,7 +38,8 @@ func TestGRPC(t *testing.T) {
 
 	// 服务端抛出了ErrNoAuthorizationInMetadata的错误
 	r, err = c.SayHello1(ctx, &pb.HelloRequest{Name: name})
-	t.Logf("%v", err)
+	t.Logf("%v %+v", err, r)
+	assert.Equal(t, status.Errorf(codes.Unauthenticated, "ErrNoAuthorizationInMetadata"), err)
 
 	conn1, err := grpc.Dial(userServiceAddress, grpc.WithInsecure())
 	assert.Nil(t, err)
@@ -76,6 +75,7 @@ func TestGateWay(t *testing.T) {
 	helloReplyBytes, err := ioutil.ReadAll(helloResponse.Body)
 	assert.Nil(t, err)
 	t.Logf(string(helloReplyBytes))
+	assert.Contains(t, string(helloReplyBytes), "ErrNoAuthorizationInMetadata")
 
 	// 登录
 	loginRequest := pb.LoginRequest{}
@@ -87,6 +87,7 @@ func TestGateWay(t *testing.T) {
 	defer loginResponse.Body.Close()
 	var loginReply pb.LoginReply
 	json.Unmarshal(loginReplyBytes, &loginReply)
+	t.Logf(string(helloReplyBytes))
 	assert.Equal(t, "403", loginReply.Status)
 
 	loginRequest.Username = "zw"
@@ -98,16 +99,16 @@ func TestGateWay(t *testing.T) {
 	defer loginResponse.Body.Close()
 	json.Unmarshal(loginReplyBytes, &loginReply)
 	assert.Equal(t, "200", loginReply.Status)
+	assert.NotEmpty(t, loginReply.Token)
 	t.Log(loginResponse.Status, loginReply)
 
-	helloRequest = pb.HelloRequest{Name: "zhangsan"}
-	helloRequestByte, _ = json.Marshal(helloRequest)
-	request, _ = http.NewRequest("GET", urlpfx+"/helloworld", strings.NewReader(string(helloRequestByte)))
+	request, _ = http.NewRequest("GET", urlpfx+"/helloworld?name=zhangsan", nil)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", loginReply.Token)
 	helloResponse, err = http.DefaultClient.Do(request)
 	assert.Nil(t, err)
 	helloReplyBytes, err = ioutil.ReadAll(helloResponse.Body)
 	assert.Nil(t, err)
+	assert.Contains(t, string(helloReplyBytes), "zhangsan")
 	t.Logf(string(helloReplyBytes))
 }
