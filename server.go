@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
-
 	pb "github.com/zhhnzw/grpc_demo/helloworld"
 	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
 const (
@@ -24,11 +23,18 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 }
 
 func (s *server) SayHello1(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	log.Printf("Received: %v", in)
-	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s", in.Name, in.Names, in.Embed.GetParam())}, nil
+	userName, err := CheckAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("Received: %s %v", userName, in)
+	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s userName: %s", in.Name, in.Names, in.Embed.GetParam(), userName)}, nil
 }
 
 func main() {
+	go func() {
+		runUserService()
+	}()
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
