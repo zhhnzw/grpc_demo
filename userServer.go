@@ -31,8 +31,8 @@ func (s *userServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginR
 
 func CreateToken(userName string) (tokenString string) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iss":      "lora-app-server",
-		"aud":      "lora-app-server",
+		"iss":      "grpc-demo-server",
+		"aud":      "grpc-demo-server",
 		"nbf":      time.Now().Unix(),
 		"exp":      time.Now().Add(time.Hour).Unix(),
 		"sub":      "user",
