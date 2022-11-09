@@ -22,7 +22,8 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 }
 
 func (s *server) SayHello1(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s", in.Name, in.Names, in.Embed.GetParam())}, nil
+	claims := ctx.Value("claims").(Claims)
+	return &pb.HelloReply{Message: fmt.Sprintf("Hello %s, names: %v, embed.param: %s claims:%+v", in.Name, in.Names, in.Embed.GetParam(), claims)}, nil
 }
 
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -34,11 +35,12 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 
 func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	if info.FullMethod == "/helloworld.SimpleService/SayHello1" {
-		userName, err := CheckAuth(ctx)
+		claims, err := CheckAuth(ctx)
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("userName: %s", userName)
+		log.Printf("auth claims: %+v", claims)
+		ctx = context.WithValue(ctx, "claims", claims)
 	}
 	resp, err := handler(ctx, req)
 	return resp, err

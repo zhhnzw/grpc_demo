@@ -15,8 +15,18 @@ libprotoc 3.21.7
 
 `go get -u github.com/golang/protobuf/protoc-gen-go`
 
-启动gateway后测试：
+启动服务：
+```bash
+go run server.go userServer.go
+```
 
+启动gateway：
+```bash
+cd gateway
+go run main.go
+```
+
+手动测试：
 ```bash
 $ curl -X POST -d '{"name": "will", "names":["1","2","3"], "embed":{"param":"world"}}' 127.0.0.1:9090/helloworld
 $ curl 127.0.0.1:9090/helloworld/name/embedparam  # 没传数组参数，可以跟下面的例子一样传

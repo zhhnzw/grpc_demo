@@ -79,25 +79,24 @@ func getTokenFromContext(ctx context.Context) (string, error) {
 	return token[0], nil
 }
 
-func CheckAuth(ctx context.Context) (string, error) {
+func CheckAuth(ctx context.Context) (claims Claims, err error) {
 	tokenStr, err := getTokenFromContext(ctx)
 	if err != nil {
-		return "", err
+		return claims, err
 	}
-	var clientClaims Claims
-	token, err := jwt.ParseWithClaims(tokenStr, &clientClaims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
 		if token.Header["alg"] != "HS256" {
 			return nil, errors.New("ParseWithClaims error")
 		}
 		return []byte("secret"), nil
 	})
 	if err != nil {
-		return "", err
+		return claims, err
 	}
 	if !token.Valid {
-		return "", status.Errorf(codes.Unauthenticated, "ErrInvalidToken")
+		return claims, status.Errorf(codes.Unauthenticated, "ErrInvalidToken")
 	}
-	return clientClaims.UserName, nil
+	return claims, nil
 }
 
 func runUserService() {
