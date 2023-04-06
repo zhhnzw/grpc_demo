@@ -11,11 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 	"log"
 	"net"
+	"strconv"
 	"time"
-)
-
-const (
-	userServicePort = ":50052"
 )
 
 type userServer struct{}
@@ -99,8 +96,8 @@ func CheckAuth(ctx context.Context) (claims Claims, err error) {
 	return claims, nil
 }
 
-func runUserService() {
-	lis, err := net.Listen("tcp", userServicePort)
+func runUserService(userServicePort int) {
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(userServicePort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

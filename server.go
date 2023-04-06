@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	pb "github.com/zhhnzw/grpc_demo/helloworld"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-)
-
-const (
-	port = ":50051"
+	"strconv"
 )
 
 // server is used to implement helloworld.SimpleServer.
@@ -47,10 +45,13 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 }
 
 func main() {
+	helloServicePort := flag.Int("helloServicePort", 50051, "listen helloService port")
+	userServicePort := flag.Int("userServicePort", 50052, "listen userService port")
+	flag.Parse()
 	go func() {
-		runUserService()
+		runUserService(*userServicePort)
 	}()
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(*helloServicePort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
